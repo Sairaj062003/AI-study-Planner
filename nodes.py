@@ -1,77 +1,59 @@
-from models import PlanReview
-from models import StudyPlan
 from state import StudyState
-from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
 
-load_dotenv()
+from llm import structured_planner, structured_critic
 
-model = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash"
-)
-structured_model = model.with_structured_output(StudyPlan)
-structured_critic = model.with_structured_output(PlanReview)
-planner_prompt = ChatPromptTemplate.from_template(
-    """
-    You are an AI study planner.
+from prompts import planner_prompt, critic_prompt
 
-    Create a practical study plan for a student.
 
-    Available study time: {hours} hours.
-    Subjects: {subjects}.
-    Student level: {level}.
-
-    Previous feedback:
-    {feedback}
-
-    Create a simple study plan.
-    Include the subject and recommended time for each subject.
-    """
-)
 
 def generate_plan(state: StudyState):
-    attempt = state['attempt']+1
+    attempt = state["attempt"] + 1
 
     messages = planner_prompt.invoke({
         "hours": state["hours"],
         "subjects": state["subjects"],
         "level": state["level"],
-        "feedback":state['feedback']
+        "feedback": state["feedback"]
     })
 
-    response = structured_model.invoke(messages)
+    response = structured_planner.invoke(messages)
+
+    print(f"\nGenerating study plan. Attempt: {attempt}")
 
     return {
         "plan": response,
-        "attempt":attempt
+        "attempt": attempt
     }
 
-critic_prompt = ChatPromptTemplate.from_template(
-    """
-    You are a study plan reviewer.
 
-    Review the following study plan.
+def validate_plan(state: StudyState):
+    plan = state["plan"]
 
-    Available study time: {hours} hours.
-    Subjects: {subjects}.
-    Student level: {level}.
+    total_hours = sum(
+        item.hours for item in plan.items
+    )
 
-    Study plan:
-    {plan}
+    available_hours = state["hours"]
 
-    Check whether:
-    1. The total study time is reasonable.
-    2. All requested subjects are included.
-    3. The plan is appropriate for the student's level.
-    4. The time distribution makes sense.
+    if total_hours > available_hours:
+        print("Plan validation failed.")
 
-    If the plan is reasonable, return status GOOD.
+        return {
+            "review_status": "IMPROVE",
+            "feedback": (
+                f"The plan uses {total_hours} hours, "
+                f"but only {available_hours} hours are available. "
+                "Reduce the study time."
+            )
+        }
 
-    If the plan needs improvement, return status IMPROVE
-    and explain what should be changed.
-    """
-)
+    print("Plan validation passed.")
+
+    return {
+        "review_status": "VALID",
+        "feedback": ""
+    }
+
 
 def critique_plan(state: StudyState):
     messages = critic_prompt.invoke({
@@ -83,19 +65,21 @@ def critique_plan(state: StudyState):
 
     review = structured_critic.invoke(messages)
 
-    return {
-        "review_status":review.status,
-         "feedback": review.feedback
-    }
-
-    if feedback.strip().upper().startswith("GOOD"):
-        return {
-            "feedback": feedback
-        }
+    print("AI critic reviewed the plan.")
 
     return {
-        "feedback": feedback
+        "review_status": review.status,
+        "feedback": review.feedback
     }
+
+def decide_after_validation(state: StudyState):
+    if state["review_status"] == "IMPROVE":
+        if state["attempt"] >= 3:
+            return "critic"
+
+        return "retry"
+
+    return "critic"
 
 def decide_after_critique(state: StudyState):
     if state["review_status"] == "GOOD":
