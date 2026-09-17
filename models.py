@@ -9,3 +9,7 @@ class StudyItem(BaseModel):
 
 class StudyPlan(BaseModel):
     items: list[StudyItem]
+
+class PlanReview(BaseModel):
+    status: str = Field(description="Either GOOD or IMPROVE")
+    feedback: str = Field(description="Short explanation of the review")

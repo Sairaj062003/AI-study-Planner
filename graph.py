@@ -35,6 +35,7 @@ initial_state = {
     "level": "Beginner",
     "plan": None,
     "feedback": "",
+    "review_status": None,
     "attempt": 0
 }
 

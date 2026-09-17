@@ -1,3 +1,4 @@
+from models import PlanReview
 from models import StudyPlan
 from state import StudyState
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash"
 )
 structured_model = model.with_structured_output(StudyPlan)
+structured_critic = model.with_structured_output(PlanReview)
 planner_prompt = ChatPromptTemplate.from_template(
     """
     You are an AI study planner.
@@ -58,15 +60,19 @@ critic_prompt = ChatPromptTemplate.from_template(
     Study plan:
     {plan}
 
-    Decide whether this study plan is reasonable.
+    Check whether:
+    1. The total study time is reasonable.
+    2. All requested subjects are included.
+    3. The plan is appropriate for the student's level.
+    4. The time distribution makes sense.
 
-    If the plan is good, respond with exactly:
-    GOOD
+    If the plan is reasonable, return status GOOD.
 
-    If the plan needs improvement, respond with:
-    IMPROVE: followed by a short explanation.
+    If the plan needs improvement, return status IMPROVE
+    and explain what should be changed.
     """
 )
+
 def critique_plan(state: StudyState):
     messages = critic_prompt.invoke({
         "hours": state["hours"],
@@ -75,9 +81,12 @@ def critique_plan(state: StudyState):
         "plan": state["plan"]
     })
 
-    response = model.invoke(messages)
+    review = structured_critic.invoke(messages)
 
-    feedback = response.content
+    return {
+        "review_status":review.status,
+         "feedback": review.feedback
+    }
 
     if feedback.strip().upper().startswith("GOOD"):
         return {
@@ -89,7 +98,7 @@ def critique_plan(state: StudyState):
     }
 
 def decide_after_critique(state: StudyState):
-    if state["feedback"].strip().upper().startswith("GOOD"):
+    if state["review_status"] == "GOOD":
         return "good"
 
     if state["attempt"] >= 3:
