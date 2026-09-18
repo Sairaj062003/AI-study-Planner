@@ -9,17 +9,16 @@ from state import StudyState
 from nodes import (
     generate_plan,
     validate_plan,
-    critique_plan,
-    decide_after_validation,
-    decide_after_critique
+    evaluate_plan,
+    decision_engine
 )
 
 
-# Create the graph
-builder = StateGraph(StudyState)
+builder = StateGraph(
+    StudyState
+)
 
 
-# Add nodes
 builder.add_node(
     "generate_plan",
     generate_plan
@@ -31,46 +30,58 @@ builder.add_node(
 )
 
 builder.add_node(
-    "critique_plan",
-    critique_plan
+    "evaluate_plan",
+    evaluate_plan
+)
+
+builder.add_node(
+    "decision_engine",
+    decision_engine
 )
 
 
-# START → Generate Plan
 builder.add_edge(
     START,
     "generate_plan"
 )
 
 
-# Generate Plan → Validate Plan
 builder.add_edge(
     "generate_plan",
     "validate_plan"
 )
 
 
-# Validation decision
+def route_after_validation(state):
+    if state["validation_status"] == "VALID":
+        return "evaluate"
+
+    return "decision"
+
 builder.add_conditional_edges(
     "validate_plan",
-    decide_after_validation,
+    route_after_validation,
     {
-        "critic": "critique_plan",
-        "retry": "generate_plan"
+        "evaluate": "evaluate_plan",
+        "decision": "decision_engine"
     }
 )
 
+builder.add_edge(
+    "evaluate_plan",
+    "decision_engine"
+)
 
-# Critic decision
+
 builder.add_conditional_edges(
-    "critique_plan",
-    decide_after_critique,
+    "decision_engine",
+    lambda state: state["decision"],
     {
-        "good": END,
-        "retry": "generate_plan"
+        "ACCEPT": END,
+        "RETRY": "generate_plan",
+        "FAIL": END
     }
 )
 
 
-# Compile graph
 graph = builder.compile()

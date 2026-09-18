@@ -1,5 +1,13 @@
 from pydantic import BaseModel, Field
 
+class SubjectPriority(BaseModel):
+    subject: str = Field(
+        description="Subject to study"
+    )
+
+    priority: str = Field(
+        description="Priority: High, Medium, or Low"
+    )
 
 class UserRequest(BaseModel):
     hours: float = Field(
@@ -14,8 +22,8 @@ class UserRequest(BaseModel):
         description="Student level: Beginner, Intermediate, or Advanced"
     )
 
-    priorities: str = Field(
-        description="Important priorities, preferences, or reasons mentioned by the student"
+    priorities: list[SubjectPriority] = Field(
+        description="List of subjects with their priorities"
     )
 
 
@@ -37,11 +45,63 @@ class StudyPlan(BaseModel):
     items: list[StudyItem]
 
 
-class PlanReview(BaseModel):
-    status: str = Field(
-        description="Either GOOD or IMPROVE"
+class PlanEvaluation(BaseModel):
+    time_fit_score: int = Field(
+        description="Score from 1 to 10 for how appropriately study time is distributed"
     )
 
-    feedback: str = Field(
-        description="Short explanation of the review"
+    subject_coverage_score: int = Field(
+        description="Score from 1 to 10 for how well the plan covers all requested subjects"
     )
+
+    priority_alignment_score: int = Field(
+        description="Score from 1 to 10 for how well the plan follows subject priorities"
+    )
+
+    level_suitability_score: int = Field(
+        description="Score from 1 to 10 for how suitable the plan is for the student's level"
+    )
+
+    realism_score: int = Field(
+        description="Score from 1 to 10 for how realistic and practical the plan is"
+    )
+
+    overall_feedback: str = Field(
+        description="Short explanation of the plan quality and what could be improved"
+    )
+
+class WorkflowError(BaseModel):
+    error_type: str = Field(
+        description="Type of workflow error"
+    )
+
+    message: str = Field(
+        description="Human-readable explanation of the error"
+    )
+
+    recoverable: bool = Field(
+        description="Whether the workflow can retry after this error"
+    )
+
+class ExecutionTrace(BaseModel):
+    attempt: int
+
+    validation_status: str
+
+    time_fit_score: int | None = None
+
+    subject_coverage_score: int | None = None
+
+    priority_alignment_score: int | None = None
+
+    level_suitability_score: int | None = None
+
+    realism_score: int | None = None
+
+    decision: str
+
+    reason: str = ""
+
+    error_type: str | None = None
+
+    error_message: str | None = None

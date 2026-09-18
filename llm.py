@@ -1,3 +1,4 @@
+from models import PlanEvaluation
 from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -5,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from models import (
     UserRequest,
     StudyPlan,
-    PlanReview
+    PlanEvaluation
 )
 
 
@@ -27,6 +28,6 @@ structured_planner = model.with_structured_output(
 )
 
 
-structured_critic = model.with_structured_output(
-    PlanReview
-)
+structured_evaluator = model.with_structured_output(
+    PlanEvaluation
+)         

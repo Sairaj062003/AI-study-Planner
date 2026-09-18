@@ -2,6 +2,10 @@ from graph import graph
 
 from nodes import parse_user_request
 
+from harness.input_validator import validate_user_request
+
+
+
 
 def display_plan(result):
     """
@@ -78,7 +82,15 @@ def main():
     user_request = input(
         "Your request: "
     ).strip()
+    
 
+    is_valid,error_message = validate_user_request(user_request)
+    
+    if not is_valid:
+        print(
+            error_message
+        )
+        return
 
     # Basic input validation
     if not user_request:
@@ -122,10 +134,13 @@ def main():
         f"{parsed_request.level}"
     )
 
-    print(
-        f"Priorities: "
-        f"{parsed_request.priorities}"
-    )
+    print("Priorities:")
+
+    for priority in parsed_request.priorities:
+        print(
+            f"{priority.subject}: "
+            f"{priority.priority}"
+        )
 
 
     # ---------------------------------
@@ -139,22 +154,26 @@ def main():
 
 
     initial_state = {
-        "hours": parsed_request.hours,
+    "hours": parsed_request.hours,
+    "subjects": subjects,
+    "level": parsed_request.level,
+    "priorities": parsed_request.priorities,
 
-        "subjects": subjects,
+    "plan": None,
+    "evaluation": None,
 
-        "level": parsed_request.level,
+    "feedback": "",
 
-        "priorities": parsed_request.priorities,
+    "validation_status": "",
+    "decision": "",
+    "retry_reason": "",
 
-        "plan": None,
+    "error": None,
 
-        "feedback": "",
+    "execution_trace": [],
 
-        "review_status": "",
-
-        "attempt": 0
-    }
+    "attempt": 0
+}
 
 
     # ---------------------------------
@@ -178,13 +197,121 @@ def main():
 
 
     print(
-        "\n========== AI REVIEW =========="
+        "\n========== AI EVALUATION =========="
+    )
+
+    evaluation = result["evaluation"]
+
+    print(
+        f"Time fit: "
+        f"{evaluation.time_fit_score}/10"
     )
 
     print(
-        result["feedback"]
+        f"Subject coverage: "
+        f"{evaluation.subject_coverage_score}/10"
+       )
+
+    print(
+        f"Priority alignment: "
+        f"{evaluation.priority_alignment_score}/10"
     )
+
+    print(
+    f"Level suitability: "
+    f"{evaluation.level_suitability_score}/10"
+)
+
+    print(
+    f"Realism: "
+    f"{evaluation.realism_score}/10"
+)
+
+    print(
+        "\nFeedback:"
+    )
+
+    print(
+        evaluation.overall_feedback
+    )
+
+    display_execution_trace(
+        result
+    )
+
+
+def display_execution_trace(result):
+    """
+    Display the execution history of the workflow.
+    """
+
+    print(
+        "\n========== EXECUTION TRACE =========="
+    )
+
+    for trace in result["execution_trace"]:
+
+        print(
+            f"\nAttempt {trace.attempt}"
+        )
+
+        print(
+            f"Validation: "
+            f"{trace.validation_status}"
+        )
+
+        if trace.time_fit_score is not None:
+
+            print(
+                f"Time fit: "
+                f"{trace.time_fit_score}/10"
+            )
+
+            print(
+                f"Subject coverage: "
+                f"{trace.subject_coverage_score}/10"
+            )
+
+            print(
+                f"Priority alignment: "
+                f"{trace.priority_alignment_score}/10"
+            )
+
+            print(
+                f"Level suitability: "
+                f"{trace.level_suitability_score}/10"
+            )
+
+            print(
+                f"Realism: "
+                f"{trace.realism_score}/10"
+            )
+
+        print(
+            f"Decision: "
+            f"{trace.decision}"
+        )
+
+        if trace.reason:
+
+            print(
+                f"Reason: "
+                f"{trace.reason}"
+            )
+
+        if trace.error_type:
+
+            print(
+                f"Error type: "
+                f"{trace.error_type}"
+            )
+
+            print(
+                f"Error message: "
+                f"{trace.error_message}"
+            )
 
 
 if __name__ == "__main__":
     main()
+

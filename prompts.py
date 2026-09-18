@@ -11,24 +11,45 @@ request_parser_prompt = ChatPromptTemplate.from_template(
     Student request:
     {user_request}
 
-    Extract the following:
+    Extract:
 
     1. Available study hours.
     2. Subjects the student wants to study.
     3. Student level.
+    4. Subject priorities.
+
+    Level rules:
 
     If the student does not mention their level,
     use Beginner.
 
-    Also identify important priorities, preferences,
-    deadlines, or reasons.
+    Priority rules:
 
-    For example:
+    Use High, Medium, or Low.
 
-    "Python is more important because I have an interview
-    next week."
+    If the student explicitly says that a subject is
+    more important, urgent, or needed for an upcoming
+    interview/exam/deadline, assign that subject High priority.
 
-    should be captured as a priority.
+    If a subject is mentioned without any special
+    importance, assign Medium priority.
+
+    If the student explicitly says a subject is less
+    important, assign Low priority.
+
+    Every requested subject should have a priority.
+
+    Example:
+
+    "I have 4 hours today. I need to study Python,
+    DSA and LangChain. Python is more important because
+    I have an interview next week."
+
+    should produce priorities similar to:
+
+    Python -> High
+    DSA -> Medium
+    LangChain -> Medium
 
     Return only the structured information.
     """
@@ -53,26 +74,32 @@ planner_prompt = ChatPromptTemplate.from_template(
     Student priorities:
     {priorities}
 
-    Previous feedback:
-    {feedback}
+    Use these priorities when deciding how much time
+    to allocate to each subject.
 
-    Instructions:
+Previous evaluation feedback:
+{feedback}
 
-    1. Include every requested subject.
-    2. Do not exceed the available study time.
-    3. Consider the student's priorities.
-    4. Assign High, Medium, or Low priority.
-    5. Give more time to important subjects when appropriate.
-    6. Create a realistic plan for the student's level.
+If previous evaluation feedback is provided:
+
+1. Identify what was wrong with the previous plan.
+2. Correct that issue in the new plan.
+3. Do not repeat the same allocation mistake.
+4. Preserve parts of the previous plan that were already good.
     """
 )
 
-
-critic_prompt = ChatPromptTemplate.from_template(
+evaluator_prompt = ChatPromptTemplate.from_template(
     """
-    You are an AI study plan reviewer.
+    You are an AI study plan evaluator.
 
-    Review the following study plan.
+    Evaluate the quality of the generated study plan.
+
+    Important:
+    Basic structural correctness has already been checked
+    by deterministic Python validation.
+
+    Focus on the QUALITY of the plan.
 
     Available study time:
     {hours} hours
@@ -86,25 +113,64 @@ critic_prompt = ChatPromptTemplate.from_template(
     Student priorities:
     {priorities}
 
-    Study plan:
+    Generated study plan:
     {plan}
 
-    Check:
 
-    1. Does the total study time fit within the available time?
-    2. Are all requested subjects included?
-    3. Is the plan appropriate for the student's level?
-    4. Is the time distribution reasonable?
-    5. Does the plan respect the student's priorities?
+    Evaluate the plan using these dimensions:
 
-    If the plan is reasonable:
+    1. Time Fit
 
-    status = GOOD
+    Is the distribution of study time sensible?
+    A plan can technically fit within the available hours
+    but still distribute the time poorly.
 
-    If the plan needs improvement:
 
-    status = IMPROVE
+    2. Subject Coverage
 
-    Provide a short explanation in feedback.
+    Does the plan give reasonable attention to all
+    requested subjects?
+
+    Do not simply check whether subjects exist.
+    Evaluate whether their allocated time is reasonable.
+
+
+    3. Priority Alignment
+
+    Does the plan give appropriate importance and time
+    to high-priority subjects?
+
+    High-priority subjects should generally receive
+    more attention when appropriate.
+
+
+    4. Level Suitability
+
+    Is the plan appropriate for the student's level?
+
+
+    5. Realism
+
+    Could a real student realistically follow this plan?
+
+
+    Scoring:
+
+    Give every dimension a score from 1 to 10.
+
+    1 = Very poor
+    5 = Average
+    10 = Excellent
+
+
+    Important:
+
+    Do not reject the plan only because it does not use
+    every available hour.
+
+    Focus on whether the generated plan is practical,
+    sensible, and aligned with the student's request.
+
+    Finally, provide concise overall feedback.
     """
 )
