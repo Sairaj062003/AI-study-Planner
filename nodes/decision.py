@@ -1,12 +1,14 @@
 from trace import create_execution_trace
 from decision import decide_next_action, decide_from_evaluation
 from state import StudyState
+
+
 def decision_engine(state: StudyState):
     """
     Decide whether the workflow should accept,
     retry, or fail.
     """
-
+    
     decision, reason = decide_next_action(
         state
     )
@@ -29,7 +31,7 @@ def decision_engine(state: StudyState):
         reason=reason,
         error=state["error"]
     )
-
+    
 
     updated_trace = (
         state["execution_trace"]

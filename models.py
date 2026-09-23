@@ -65,6 +65,14 @@ class PlanEvaluation(BaseModel):
     realism_score: int = Field(
         description="Score from 1 to 10 for how realistic and practical the plan is"
     )
+    memory_consistency_score: int = Field(
+        description=(
+            "Score from 1 to 10 for how appropriately "
+            "the plan uses relevant historical memory "
+            "without allowing memory to override the "
+            "current request"
+        )
+    )
 
     overall_feedback: str = Field(
         description="Short explanation of the plan quality and what could be improved"
@@ -98,6 +106,8 @@ class ExecutionTrace(BaseModel):
 
     realism_score: int | None = None
 
+    memory_consistency_score: int | None = None
+
     decision: str
 
     reason: str = ""
@@ -105,3 +115,30 @@ class ExecutionTrace(BaseModel):
     error_type: str | None = None
 
     error_message: str | None = None
+
+class MemoryUpdate(BaseModel):
+    memory_type: str = Field(
+        description="Type of memory: preference or pattern"
+    )
+
+    subject: str = Field(
+        description="Subject related to the memory"
+    )
+
+    information: str = Field(
+        description="Information learned from the study history"
+    )
+
+    importance: str = Field(
+        description="Importance of the memory: low, medium, or high"
+    )    
+
+class SessionFeedback(BaseModel):
+    completed_subjects: list[str] = Field(
+        description="Subjects the student actually completed"
+    )
+
+    skipped_subjects: list[str] = Field(
+        description="Subjects the student skipped"
+    )
+

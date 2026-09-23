@@ -55,9 +55,11 @@ def create_execution_trace(
         level_suitability_score=(
             evaluation.level_suitability_score
         ),
-
         realism_score=(
             evaluation.realism_score
+        ),
+        memory_consistency_score=(
+            evaluation.memory_consistency_score
         ),
 
         decision=decision,

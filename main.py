@@ -160,21 +160,33 @@ def main():
     "priorities": parsed_request.priorities,
 
     "plan": None,
-    "evaluation": None,
 
     "feedback": "",
 
     "validation_status": "",
+
+    "evaluation": None,
+
     "decision": "",
+
     "retry_reason": "",
 
     "error": None,
 
     "execution_trace": [],
 
+    "memory_context": "",
+
+    "memory_insights": "",
+
+    "session_feedback": None,
+
+    "session": None,
+
+    "session_error": "",
+
     "attempt": 0
 }
-
 
     # ---------------------------------
     # STEP 3: Run LangGraph
@@ -190,17 +202,15 @@ def main():
 
 
     # ---------------------------------
-    # STEP 4: Display final result
+    # STEP 4: Display evaluation summary
+    # and execution trace
     # ---------------------------------
 
-    display_plan(result)
-
+    evaluation = result["evaluation"]
 
     print(
         "\n========== AI EVALUATION =========="
     )
-
-    evaluation = result["evaluation"]
 
     print(
         f"Time fit: "
@@ -210,7 +220,7 @@ def main():
     print(
         f"Subject coverage: "
         f"{evaluation.subject_coverage_score}/10"
-       )
+    )
 
     print(
         f"Priority alignment: "
@@ -218,14 +228,19 @@ def main():
     )
 
     print(
-    f"Level suitability: "
-    f"{evaluation.level_suitability_score}/10"
-)
+        f"Level suitability: "
+        f"{evaluation.level_suitability_score}/10"
+    )
 
     print(
-    f"Realism: "
-    f"{evaluation.realism_score}/10"
-)
+        f"Realism: "
+        f"{evaluation.realism_score}/10"
+    )
+
+    print(
+        f"Memory consistency: "
+        f"{evaluation.memory_consistency_score}/10"
+    )
 
     print(
         "\nFeedback:"
@@ -286,6 +301,13 @@ def display_execution_trace(result):
                 f"Realism: "
                 f"{trace.realism_score}/10"
             )
+
+            if trace.memory_consistency_score is not None:
+
+                print(
+                    f"Memory consistency: "
+                    f"{trace.memory_consistency_score}/10"
+                )
 
         print(
             f"Decision: "

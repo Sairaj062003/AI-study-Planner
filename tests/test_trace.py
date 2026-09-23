@@ -10,6 +10,7 @@ def test_execution_trace_records_evaluation():
         priority_alignment_score=7,
         level_suitability_score=9,
         realism_score=8,
+        memory_consistency_score=8,
         overall_feedback="Good plan."
     )
 
@@ -27,4 +28,5 @@ def test_execution_trace_records_evaluation():
     assert trace.time_fit_score == 8
     assert trace.subject_coverage_score == 9
     assert trace.priority_alignment_score == 7
-    assert trace.decision == "ACCEPT"
+    assert trace.memory_consistency_score == 8
+    assert trace.decision == "ACCEPT"

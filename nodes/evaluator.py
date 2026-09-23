@@ -21,6 +21,8 @@ def evaluate_plan(state: StudyState):
         "priorities": format_priorities(
             state["priorities"]
         ),
+        "memory_context": state.get("memory_context", ""),
+        "memory_insights": state.get("memory_insights", ""),
         "plan": plan.model_dump()
     })
 
@@ -57,6 +59,11 @@ def evaluate_plan(state: StudyState):
         print(
             f"Realism: "
             f"{evaluation.realism_score}/10"
+        )
+
+        print(
+            f"Memory consistency: "
+            f"{evaluation.memory_consistency_score}/10"
         )
 
         return {

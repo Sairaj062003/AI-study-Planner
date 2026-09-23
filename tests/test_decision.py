@@ -10,6 +10,7 @@ def test_good_evaluation_is_accepted():
         priority_alignment_score=8,
         level_suitability_score=9,
         realism_score=8,
+        memory_consistency_score=9,
         overall_feedback="Good plan."
     )
 
@@ -29,6 +30,7 @@ def test_bad_evaluation_requires_retry():
         priority_alignment_score=6,
         level_suitability_score=8,
         realism_score=5,
+        memory_consistency_score=5,
         overall_feedback="Needs improvement."
     )
 
@@ -37,4 +39,4 @@ def test_bad_evaluation_requires_retry():
     )
 
     assert decision == "RETRY"
-    assert reason != ""
+    assert reason != ""

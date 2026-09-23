@@ -74,20 +74,58 @@ planner_prompt = ChatPromptTemplate.from_template(
     Student priorities:
     {priorities}
 
-    Use these priorities when deciding how much time
-    to allocate to each subject.
+    Previous study history:
+    {memory_context}
+    
+    Memory insights:
+    {memory_insights}
 
-Previous evaluation feedback:
-{feedback}
+    Current retry reason:
+    {retry_reason}
 
-If previous evaluation feedback is provided:
+    Previous evaluation feedback:
+    {feedback}
+     
+    If a retry reason exists:
 
-1. Identify what was wrong with the previous plan.
-2. Correct that issue in the new plan.
-3. Do not repeat the same allocation mistake.
-4. Preserve parts of the previous plan that were already good.
+    1. Identify the specific problem.
+    2. Correct that problem.
+    3. Use relevant memory when useful.
+    4. Do not introduce unrelated changes.
+
+    If previous study history is available:
+
+    1. Learn from the student's previous sessions.
+    2. Consider subjects that were previously skipped.
+    3. Consider subjects that were successfully completed.
+    4. Avoid repeating previous planning mistakes.
+    5. Use previous history as context, not as a strict rule.
+    6. Always prioritize the user's current request.
+
+    If no previous study history exists,
+    create the plan normally.
+
+    Instructions:
+
+    1. Include every requested subject.
+    2. Do not exceed the available study time.
+    3. Consider the student's priorities.
+    4. Assign High, Medium, or Low priority.
+    5. Give more time to important subjects when appropriate.
+    6. Create a realistic plan for the student's level.
+    
+       when regenerating a plan:
+
+1. Fix the issues identified by the evaluator.
+2. Consider relevant historical memory.
+3. Consider learned patterns from previous sessions.
+4. Do not blindly repeat a previous allocation.
+5. Always prioritize the user's current request.
+6. Memory is supporting context, not a strict rule.
+
     """
 )
+
 
 evaluator_prompt = ChatPromptTemplate.from_template(
     """
@@ -112,6 +150,12 @@ evaluator_prompt = ChatPromptTemplate.from_template(
 
     Student priorities:
     {priorities}
+
+    Historical study memory:
+    {memory_context}
+
+    Learned memory patterns:
+    {memory_insights}
 
     Generated study plan:
     {plan}
@@ -154,9 +198,34 @@ evaluator_prompt = ChatPromptTemplate.from_template(
     Could a real student realistically follow this plan?
 
 
+    6. Memory Consistency
+
+    Evaluate whether the generated plan appropriately uses the provided
+    historical study memory and learned patterns.
+
+    Consider:
+
+    1. Does the plan learn from relevant previous study sessions?
+    2. Does it consider previously skipped or completed subjects?
+    3. Does it avoid blindly repeating previous mistakes?
+    4. Does it avoid allowing old memory to override the user's current request?
+    5. If there is no relevant memory, does the plan avoid inventing memory-based decisions?
+
+    Give a score from 1 to 10.
+
+    10 = memory is used appropriately and current user request remains the highest priority.
+    1 = memory is ignored completely when relevant, or memory incorrectly overrides the current request.
+
+
     Scoring:
 
-    Give every dimension a score from 1 to 10.
+    Give every dimension an integer score from 1 to 10:
+    - time_fit_score
+    - subject_coverage_score
+    - priority_alignment_score
+    - level_suitability_score
+    - realism_score
+    - memory_consistency_score
 
     1 = Very poor
     5 = Average

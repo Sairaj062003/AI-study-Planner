@@ -15,13 +15,16 @@ def generate_plan(state: StudyState):
     )
 
     messages = planner_prompt.invoke({
-        "hours": state["hours"],
-        "subjects": state["subjects"],
-        "level": state["level"],
-        "priorities": format_priorities(
-            state["priorities"]
-        ),
-        "feedback": state["feedback"]
+    "hours": state["hours"],
+    "subjects": state["subjects"],
+    "level": state["level"],
+    "priorities": format_priorities(
+        state["priorities"]
+    ),
+    "memory_context": state["memory_context"],
+    "retry_reason": state["retry_reason"],
+    "memory_insights": state["memory_insights"],
+    "feedback": state["feedback"]
     })
 
     try:
